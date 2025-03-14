@@ -1,103 +1,108 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import {useInfiniteQuery} from '@tanstack/react-query';
+import {useEffect, useState} from 'react';
+import Search from '@/components/main/search';
+import SearchList from '@/components/main/search-list';
+import PopularCard from '@/components/main/popular-card';
+import {activitiesList} from '@/service/api/activities/getActivities';
+import EntireList from '@/components/main/entire-list';
+import Option from '@/components/main/option';
+import {ActivitiesBody} from '@/types/activities';
+import {ActivitiesResponse} from '@/types/activities';
+import {ScaleLoader} from 'react-spinners';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+import MainBanner from '@/components/main/main-banner';
+
+export default function Mainpage() {
+  const [searchKeyword, setSearchKeyword] = useState<string | undefined>(undefined);
+  const [isShown, setIsShown] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string | undefined>('전체'); // 현재 선택된 카테고리
+  const [selectedSort, setSelectedSort] = useState<ActivitiesBody['sort']>('latest');
+  const [keyword, setKeyword] = useState<string>(''); // 입력 값을 관리
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching: IsPopularFetching,
+  } = useInfiniteQuery<ActivitiesResponse>({
+    queryKey: ['getActivities', 'most_reviewd'],
+    queryFn: ({pageParam = null}) =>
+      activitiesList({
+        method: 'cursor',
+        sort: 'most_reviewed',
+        size: 8,
+        cursorId: pageParam as number | null,
+      }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage || lastPage.activities.length === 0) {
+        return null;
+      }
+      const totalActivities = allPages.flatMap(page => page.activities).length;
+
+      if (totalActivities >= lastPage.totalCount) {
+        return null;
+      }
+      return lastPage.cursorId;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // ✅ 검색어 입력 시 검색 실행
+  const handleClick = (keyword: string | undefined) => {
+    if (!keyword) return;
+    setSearchKeyword(keyword);
+    setIsShown(true);
+  };
+
+  useEffect(() => {
+    if (searchKeyword === '' || keyword === '') {
+      setIsShown(false);
+    }
+  }, [searchKeyword, keyword]);
+
+  const popularList = data?.pages.flatMap(page => page.activities) || [];
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="bg-[rgba(250, 251, 252, 1)] w-full overflow-hidden">
+      {/* ✅ Swiper 배너 */}
+      <section className="relative h-[240px] tablet:h-[550px]">
+        <MainBanner />
+        <div className="absolute -bottom-20 left-1/2 z-10 w-full max-w-[1200px] -translate-x-1/2 px-4 tablet:px-6 pc:px-0">
+          <div>
+            <Search onClick={handleClick} keyword={keyword} setKeyword={setKeyword} />
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </section>
+      {isShown ? (
+        <SearchList keyword={searchKeyword} />
+      ) : (
+        <div className="mb-[12.688rem] flex w-full max-w-[1200px] flex-col items-center justify-center px-4 tablet:mb-[41.063rem] tablet:px-6 pc:mx-auto pc:mb-[21.375rem] pc:px-0">
+          {/* ✅ 인기 체험 섹션 */}
+          <section className="relative mb-40pxr mt-101pxr flex w-full flex-col gap-4 tablet:mt-110pxr tablet:gap-8 pc:mt-126pxr">
+            <PopularCard data={popularList} fetchNextpage={fetchNextPage} hasNextPage={hasNextPage} />
+            {IsPopularFetching && (
+              <div className="absolute inset-0 z-10 flex min-h-28 min-w-28 items-center justify-center">
+                <ScaleLoader />
+              </div>
+            )}
+          </section>
+          {/* ✅ 모든 체험 섹션 */}
+          <div className="pc:mt-15 pc: mb-6 mt-10 flex w-full items-center justify-between tablet:mb-[2.188rem] tablet:mt-[3.375rem] pc:max-w-[1200px]">
+            <Option
+              activeCategory={activeCategory}
+              setActiveCategory={setActiveCategory}
+              selectedSort={selectedSort}
+              onSelectedSort={setSelectedSort}
+            />
+          </div>
+          <EntireList activeCategory={activeCategory} selectedSort={selectedSort} />
+        </div>
+      )}
     </div>
   );
 }
