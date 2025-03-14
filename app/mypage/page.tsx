@@ -1,19 +1,19 @@
 'use client';
-import OverlayContainer from '@/components/common/modal/overlay-container';
+// import OverlayContainer from '@/components/common/modal/overlay-container';
 import SideNavi from '@/components/side-navigation/side-navi';
 import Mypage from '@/components/side-navigation/mypage';
 import React, {useState, useEffect} from 'react';
 import ReservationList from '../../components/reservation-list/reservation-list';
-import Navbar from '@/components/common/navbar';
+// import Navbar from '@/components/common/navbar';
 import ReservationCalendar from '../../components/reservation-calendar/reservation-calendar';
-import Footer from '@/components/common/footer';
-import MyActivities from '../../components/myactivities/myactivities';
+// import Footer from '@/components/common/footer';
+// import MyActivities from '../../components/myactivities/myactivities';
 import ActivitiesRegister from '../../components/myactivities/activities-register';
 
 export default function Page() {
   const [selectedMenu, setSelectedMenu] = useState('myinfo');
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  // const [isOpen, setIsOpen] = useState(false);
   const [key, setKey] = useState(0);
 
   function getPageSize(width: number): boolean {
@@ -57,7 +57,7 @@ export default function Page() {
       case 'reserveList':
         return <ReservationList />;
       case 'treatReservation':
-        return <MyActivities />;
+      // return <MyActivities />;
       case 'activitiesRegister':
         return <ActivitiesRegister />;
       case 'reserveCalendar':
@@ -77,7 +77,7 @@ export default function Page() {
         // **모바일 환경**
         <div className="">
           <SideNavi selectedMenu={selectedMenu} onSelectMenu={handleSelectMenu} isMobile={isMobile} />
-          {isOpen && (
+          {/* {isOpen && (
             <OverlayContainer>
               <div className="h-full w-full overflow-y-auto bg-white">
                 <Navbar />
@@ -87,7 +87,7 @@ export default function Page() {
                 <Footer />
               </div>
             </OverlayContainer>
-          )}
+          )} */}
         </div>
       ) : (
         // **PC/태블릿 환경**
